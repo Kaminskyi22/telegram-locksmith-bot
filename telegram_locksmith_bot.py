@@ -23,7 +23,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /start is issued."""
     user = update.effective_user
     await update.message.reply_text(
-        f'Привіт {user.first_name}! Я бот-помічник. Надішліть мені повідомлення або локацію, і я передам їх адміністратору.'
+        f'Привіт {user.first_name}! Я бот-помічник. Надішліть мені повідомлення, фото або локацію, і я передам їх адміністратору.'
     )
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -56,6 +56,21 @@ async def handle_location(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     # Send confirmation to user
     await update.message.reply_text('Ваша локація отримана та передана адміністратору.')
 
+async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle incoming photos."""
+    user = update.effective_user
+    photo = update.message.photo[-1]  # Get the largest photo
+    
+    # Forward photo to admin
+    await context.bot.send_photo(
+        chat_id=ADMIN_CHAT_ID,
+        photo=photo.file_id,
+        caption=f'Фото від {user.first_name} (ID: {user.id})'
+    )
+    
+    # Send confirmation to user
+    await update.message.reply_text('Ваше фото отримано та передано адміністратору.')
+
 def main() -> None:
     """Start the bot."""
     # Create the Application and pass it your bot's token
@@ -65,6 +80,7 @@ def main() -> None:
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     application.add_handler(MessageHandler(filters.LOCATION, handle_location))
+    application.add_handler(MessageHandler(filters.PHOTO, handle_photo))
 
     # Start the Bot
     application.run_polling(allowed_updates=Update.ALL_TYPES)
