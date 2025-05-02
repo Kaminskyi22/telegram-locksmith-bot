@@ -1,7 +1,7 @@
 import os
 import logging
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, CallbackQueryHandler
+from telegram import Update
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
 # Enable logging
 logging.basicConfig(
@@ -11,7 +11,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Get environment variables
-BOT_TOKEN = "7758144538:AAFpz2aBdNLK3vA-jYEU_S1cloVgDtHTC80"  # Ваш токен
+BOT_TOKEN = "7758144538:AAH43t5xiEhUoXc06wBUwD_HGLCpe1XhkaI"  # Ваш токен
 ADMIN_CHAT_ID = "6125664936"  # Ваш Chat ID
 
 # Перевірка наявності змінних середовища
@@ -59,16 +59,13 @@ async def handle_location(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle incoming photos."""
     user = update.effective_user
-    photo = update.message.photo[-1]  # Get the largest photo
-    
-    # Forward photo to admin
+    photo = update.message.photo[-1]
+    caption = f'Фото від {user.first_name} (ID: {user.id})'
     await context.bot.send_photo(
         chat_id=ADMIN_CHAT_ID,
         photo=photo.file_id,
-        caption=f'Фото від {user.first_name} (ID: {user.id})'
+        caption=caption
     )
-    
-    # Send confirmation to user
     await update.message.reply_text('Ваше фото отримано та передано адміністратору.')
 
 def main() -> None:
