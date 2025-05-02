@@ -11,7 +11,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Get environment variables
-BOT_TOKEN = "7758144538:AAGNt0BbK-SDGgTeMo1IUFh0eE2tMTEoQt4"  # Ваш токен
+BOT_TOKEN = "7758144538:AAH43t5xiEhUoXc06wBUwD_HGLCpe1XhkaI"  # Ваш токен
 ADMIN_CHAT_ID = "6125664936"  # Ваш Chat ID
 
 # Перевірка наявності змінних середовища
