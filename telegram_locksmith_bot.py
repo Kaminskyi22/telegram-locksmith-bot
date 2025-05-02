@@ -44,17 +44,19 @@ async def handle_location(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     """Handle incoming location."""
     user = update.effective_user
     location = update.message.location
-    
-    # Forward location to admin
-    await context.bot.send_location(
-        chat_id=ADMIN_CHAT_ID,
-        latitude=location.latitude,
-        longitude=location.longitude,
-        caption=f'Локація від {user.first_name} (ID: {user.id})'
-    )
-    
-    # Send confirmation to user
-    await update.message.reply_text('Ваша локація отримана та передана адміністратору.')
+    if location:
+        await context.bot.send_message(
+            chat_id=ADMIN_CHAT_ID,
+            text=f'Локація від {user.first_name} (ID: {user.id}):\nШирота: {location.latitude}\nДовгота: {location.longitude}'
+        )
+        await context.bot.send_location(
+            chat_id=ADMIN_CHAT_ID,
+            latitude=location.latitude,
+            longitude=location.longitude
+        )
+        await update.message.reply_text('Ваша локація отримана та передана адміністратору.')
+    else:
+        await update.message.reply_text('Не вдалося отримати локацію.')
 
 async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle incoming photos."""
