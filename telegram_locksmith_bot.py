@@ -29,7 +29,6 @@ keyboard = [
     [KeyboardButton("🎤 Надіслати голосове")],
     [KeyboardButton("🎥 Відео кружечок")],
     [KeyboardButton("📞 Зателефонувати", request_contact=True)],
-    [KeyboardButton("💸 Оплатити криптою")],
     [KeyboardButton("ℹ️ Інформація"), KeyboardButton("📝 Залишити відгук")]
 ]
 reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
@@ -55,10 +54,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     logger.info(f"handle_message() called by user: {user.id} ({user.first_name}), message: {message}")
     
     # Обробка кнопок
-    if message == "💸 Оплатити криптою":
-        await update.message.reply_text("Для оплати криптовалютою скористайтесь цим гаманцем: ... (сюди вставити адресу)")
-        return
-    elif message == "ℹ️ Інформація":
+    if message == "ℹ️ Інформація":
         await update.message.reply_text("Я бот для зв'язку з адміністратором. Ви можете передати локацію, фото, голосове, відео-кружечок або написати повідомлення.")
         return
     elif message == "📝 Залишити відгук":
