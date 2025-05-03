@@ -16,6 +16,12 @@ ADMIN_CHAT_ID = os.environ.get("ADMIN_CHAT_ID")
 PORT = int(os.environ.get('PORT', 8443))
 RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 
+# Логування змінних середовища
+logger.info(f"BOT_TOKEN: {'*' * len(BOT_TOKEN) if BOT_TOKEN else 'None'}")
+logger.info(f"ADMIN_CHAT_ID: {ADMIN_CHAT_ID}")
+logger.info(f"PORT: {PORT}")
+logger.info(f"RENDER_EXTERNAL_HOSTNAME: {RENDER_EXTERNAL_HOSTNAME}")
+
 # Клавіатура з кнопками
 keyboard = [
     [KeyboardButton("📍 Передати локацію", request_location=True)],
@@ -142,11 +148,12 @@ def main() -> None:
         application.add_handler(MessageHandler(filters.VIDEO_NOTE, handle_video_note))
 
         # Start the Bot with webhook configuration
-        webhook_url = f"https://{RENDER_EXTERNAL_HOSTNAME}/{BOT_TOKEN}"
+        webhook_url = f"https://{RENDER_EXTERNAL_HOSTNAME}/webhook/{BOT_TOKEN}"
         application.run_webhook(
             listen="0.0.0.0",
             port=PORT,
             webhook_url=webhook_url,
+            webhook_path=f"/webhook/{BOT_TOKEN}",
             drop_pending_updates=True
         )
     except Exception as e:
