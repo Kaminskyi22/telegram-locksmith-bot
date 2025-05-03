@@ -153,7 +153,6 @@ def main() -> None:
             listen="0.0.0.0",
             port=PORT,
             webhook_url=webhook_url,
-            webhook_path=f"/webhook/{BOT_TOKEN}",
             drop_pending_updates=True
         )
     except Exception as e:
