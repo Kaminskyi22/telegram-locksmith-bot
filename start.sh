@@ -1,2 +1,2 @@
 #!/bin/bash
-python telegram_locksmith_bot.py 
+python3 telegram_locksmith_bot.py 

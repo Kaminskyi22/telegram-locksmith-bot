@@ -18,11 +18,21 @@ ADMIN_CHAT_ID = os.environ.get("ADMIN_CHAT_ID")
 PORT = int(os.environ.get('PORT', 8443))
 RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 
-# Логування змінних середовища
-logger.info(f"BOT_TOKEN: {'*' * len(BOT_TOKEN) if BOT_TOKEN else 'None'}")
+# Логування змінних середовища (без токена)
 logger.info(f"ADMIN_CHAT_ID: {ADMIN_CHAT_ID}")
 logger.info(f"PORT: {PORT}")
 logger.info(f"RENDER_EXTERNAL_HOSTNAME: {RENDER_EXTERNAL_HOSTNAME}")
+
+# Перевірка наявності змінних середовища
+if not BOT_TOKEN:
+    logger.error("BOT_TOKEN не встановлено!")
+    exit(1)
+if not ADMIN_CHAT_ID:
+    logger.error("ADMIN_CHAT_ID не встановлено!")
+    exit(1)
+if not RENDER_EXTERNAL_HOSTNAME:
+    logger.error("RENDER_EXTERNAL_HOSTNAME не встановлено!")
+    exit(1)
 
 # Клавіатура з кнопками
 keyboard = [
@@ -34,11 +44,6 @@ keyboard = [
     [KeyboardButton("ℹ️ Інформація"), KeyboardButton("📝 Залишити відгук")]
 ]
 reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-
-# Перевірка наявності змінних середовища
-if not ADMIN_CHAT_ID or not BOT_TOKEN or not RENDER_EXTERNAL_HOSTNAME:
-    logger.error("Не встановлено одну з обов'язкових змінних середовища: ADMIN_CHAT_ID, BOT_TOKEN, RENDER_EXTERNAL_HOSTNAME.")
-    exit(1)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /start is issued."""
@@ -138,11 +143,17 @@ async def handle_video_note(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     await update.message.reply_text('Ваше відео-кружечок передано адміністратору.')
 
 async def webhook_handler(request):
-    application = request.app['application']
-    data = await request.json()
-    update = Update.de_json(data, application.bot)
-    await application.process_update(update)
-    return web.Response()
+    """Handle incoming webhook updates."""
+    try:
+        application = request.app['application']
+        data = await request.json()
+        logger.info(f"Received webhook update: {data}")
+        update = Update.de_json(data, application.bot)
+        await application.process_update(update)
+        return web.Response(text="OK")
+    except Exception as e:
+        logger.error(f"Error in webhook handler: {str(e)}")
+        return web.Response(status=500, text=str(e))
 
 async def main():
     """Start the bot."""
@@ -158,24 +169,42 @@ async def main():
         application.add_handler(MessageHandler(filters.VOICE, handle_voice))
         application.add_handler(MessageHandler(filters.VIDEO_NOTE, handle_video_note))
 
-        # Start the Bot with webhook (PTB 22.x)
+        # Delete any existing webhook
+        await application.bot.delete_webhook()
+        logger.info("Deleted existing webhook")
+
+        # Set up webhook
         webhook_path = f"/webhook/{BOT_TOKEN}"
         webhook_url = f"https://{RENDER_EXTERNAL_HOSTNAME}{webhook_path}"
-        await application.bot.set_webhook(webhook_url)
+        logger.info(f"Setting up webhook at: {webhook_url}")
+        
+        await application.bot.set_webhook(
+            url=webhook_url,
+            allowed_updates=["message", "callback_query"]
+        )
+        logger.info("Webhook set successfully")
 
+        # Set up aiohttp server
         app = web.Application()
         app['application'] = application
         app.router.add_post(webhook_path, webhook_handler)
+        
+        # Add health check endpoint
+        async def health_check(request):
+            return web.Response(text="OK")
+        
+        app.router.add_get("/health", health_check)
 
         runner = web.AppRunner(app)
         await runner.setup()
         site = web.TCPSite(runner, "0.0.0.0", PORT)
         await site.start()
-        logger.info(f"Webhook started at {webhook_url}")
+        logger.info(f"Server started on port {PORT}")
 
+        # Keep the application running
         await asyncio.Event().wait()
     except Exception as e:
-        logger.error(f"Помилка запуску бота: {str(e)}")
+        logger.error(f"Error in main: {str(e)}")
         raise
 
 if __name__ == '__main__':
