@@ -42,6 +42,7 @@ if not ADMIN_CHAT_ID or not BOT_TOKEN or not RENDER_EXTERNAL_HOSTNAME:
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /start is issued."""
     user = update.effective_user
+    logger.info(f"start() called by user: {user.id} ({user.first_name})")
     await update.message.reply_text(
         f'Привіт {user.first_name}! Я бот-помічник. Оберіть дію нижче:',
         reply_markup=reply_markup
@@ -51,6 +52,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     """Handle incoming messages."""
     user = update.effective_user
     message = update.message.text
+    logger.info(f"handle_message() called by user: {user.id} ({user.first_name}), message: {message}")
     
     # Обробка кнопок
     if message == "💸 Оплатити криптою":
@@ -88,6 +90,7 @@ async def handle_location(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     """Handle incoming location."""
     user = update.effective_user
     location = update.message.location
+    logger.info(f"handle_location() called by user: {user.id} ({user.first_name}), location: {location}")
     if location:
         await context.bot.send_message(
             chat_id=ADMIN_CHAT_ID,
@@ -105,6 +108,7 @@ async def handle_location(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle incoming photos."""
     user = update.effective_user
+    logger.info(f"handle_photo() called by user: {user.id} ({user.first_name})")
     photo = update.message.photo[-1]
     caption = f'Фото від {user.first_name} (ID: {user.id})'
     await context.bot.send_photo(
@@ -116,6 +120,7 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user = update.effective_user
+    logger.info(f"handle_voice() called by user: {user.id} ({user.first_name})")
     voice = update.message.voice
     await context.bot.send_voice(
         chat_id=ADMIN_CHAT_ID,
@@ -126,6 +131,7 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 async def handle_video_note(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user = update.effective_user
+    logger.info(f"handle_video_note() called by user: {user.id} ({user.first_name})")
     video_note = update.message.video_note
     await context.bot.send_video_note(
         chat_id=ADMIN_CHAT_ID,
