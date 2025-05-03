@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 # Get environment variables
 BOT_TOKEN = "7758144538:AAFpz2aBdNLK3vA-jYEU_S1cloVgDtHTC80"  # Ваш токен
 ADMIN_CHAT_ID = "6125664936"  # Ваш Chat ID
+PORT = int(os.environ.get('PORT', 8443))
 
 # Перевірка наявності змінних середовища
 if not ADMIN_CHAT_ID:
@@ -82,9 +83,11 @@ def main() -> None:
         application.add_handler(MessageHandler(filters.LOCATION, handle_location))
         application.add_handler(MessageHandler(filters.PHOTO, handle_photo))
 
-        # Start the Bot with minimal configuration
-        application.run_polling(
-            allowed_updates=Update.ALL_TYPES,
+        # Start the Bot with webhook configuration
+        application.run_webhook(
+            listen="0.0.0.0",
+            port=PORT,
+            webhook_url=f"https://telegram-locksmith-bot.onrender.com/{BOT_TOKEN}",
             drop_pending_updates=True
         )
     except Exception as e:
