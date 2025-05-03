@@ -1,5 +1,7 @@
 import os
 import logging
+import asyncio
+from aiohttp import web
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
@@ -135,7 +137,14 @@ async def handle_video_note(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     )
     await update.message.reply_text('Ваше відео-кружечок передано адміністратору.')
 
-def main() -> None:
+async def webhook_handler(request):
+    application = request.app['application']
+    data = await request.json()
+    update = Update.de_json(data, application.bot)
+    await application.process_update(update)
+    return web.Response()
+
+async def main():
     """Start the bot."""
     try:
         # Create the Application and pass it your bot's token
@@ -150,17 +159,24 @@ def main() -> None:
         application.add_handler(MessageHandler(filters.VIDEO_NOTE, handle_video_note))
 
         # Start the Bot with webhook (PTB 22.x)
-        webhook_url = f"https://{RENDER_EXTERNAL_HOSTNAME}/webhook/{BOT_TOKEN}"
-        application.run_webhook(
-            listen="0.0.0.0",
-            port=PORT,
-            webhook_url=webhook_url,
-            allowed_updates=Update.ALL_TYPES,
-            drop_pending_updates=True
-        )
+        webhook_path = f"/webhook/{BOT_TOKEN}"
+        webhook_url = f"https://{RENDER_EXTERNAL_HOSTNAME}{webhook_path}"
+        await application.bot.set_webhook(webhook_url)
+
+        app = web.Application()
+        app['application'] = application
+        app.router.add_post(webhook_path, webhook_handler)
+
+        runner = web.AppRunner(app)
+        await runner.setup()
+        site = web.TCPSite(runner, "0.0.0.0", PORT)
+        await site.start()
+        logger.info(f"Webhook started at {webhook_url}")
+
+        await asyncio.Event().wait()
     except Exception as e:
         logger.error(f"Помилка запуску бота: {str(e)}")
         raise
 
 if __name__ == '__main__':
-    main() 
+    asyncio.run(main()) 
