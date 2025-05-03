@@ -153,8 +153,12 @@ def main() -> None:
         application.add_handler(MessageHandler(filters.VOICE, handle_voice))
         application.add_handler(MessageHandler(filters.VIDEO_NOTE, handle_video_note))
 
-        # Start the Bot with polling (діагностика)
-        application.run_polling(
+        # Start the Bot with webhook (PTB 22.x)
+        webhook_url = f"https://{RENDER_EXTERNAL_HOSTNAME}/webhook/{BOT_TOKEN}"
+        application.run_webhook(
+            listen="0.0.0.0",
+            port=PORT,
+            webhook_url=webhook_url,
             allowed_updates=Update.ALL_TYPES,
             drop_pending_updates=True
         )
