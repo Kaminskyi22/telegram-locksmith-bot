@@ -184,6 +184,9 @@ async def main():
         )
         logger.info("Webhook set successfully")
 
+        # ІНІЦІАЛІЗАЦІЯ Application
+        await application.initialize()
+
         # Set up aiohttp server
         app = web.Application()
         app['application'] = application
